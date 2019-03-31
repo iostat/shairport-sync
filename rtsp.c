@@ -3,7 +3,7 @@
  * Copyright (c) James Laird 2013
 
  * Modifications associated with audio synchronization, mutithreading and
- * metadata handling copyright (c) Mike Brady 2014-2019
+ * metadata handling and more copyright (c) Mike Brady 2014-2019
  * All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person
@@ -28,6 +28,7 @@
  */
 
 #include <arpa/inet.h>
+#include <inttypes.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <memory.h>
@@ -1324,6 +1325,7 @@ void metadata_process(uint32_t type, uint32_t code, char *data, uint32_t length)
     uint32_t v;
     char *data_crsr = data;
     do {
+      debug(1,"metadata_process: sending chunk %" PRIu32 " of %" PRIu32 ".", chunk_ix, chunk_total);
       char *ptr = metadata_sockmsg;
       memcpy(ptr, "ssncchnk", 8);
       ptr += 8;
@@ -1348,6 +1350,7 @@ void metadata_process(uint32_t type, uint32_t code, char *data, uint32_t length)
       sendto(metadata_sock, metadata_sockmsg, datalen + 24, 0,
              (struct sockaddr *)&metadata_sockaddr, sizeof(metadata_sockaddr));
       chunk_ix++;
+      usleep(100000); // wait for this number of microseconds.
       remaining -= datalen;
       if (remaining == 0)
         break;
