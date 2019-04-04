@@ -1297,7 +1297,18 @@ static void metadata_close(void) {
 }
 
 void metadata_process(uint32_t type, uint32_t code, char *data, uint32_t length) {
-  // debug(2, "Process metadata with type %x, code %x and length %u.", type, code, length);
+	
+	// this is for debug messages only
+  char tc[5]; tc[4]=0;
+  char cc[5]; cc[4]=0;
+	uint32_t td;
+	td = htonl(type);
+	memcpy(tc,&td,4);
+	td = htonl(code);
+	memcpy(cc,&td,4);  
+	
+  debug(1, "Process metadata with type '%s', code '%s' and length %u.", tc, cc, length);
+  
   int ret;
 
   if (metadata_sock >= 0 && length < config.metadata_sockmsglength - 8) {
@@ -1310,6 +1321,7 @@ void metadata_process(uint32_t type, uint32_t code, char *data, uint32_t length)
     memcpy(ptr, &v, 4);
     ptr += 4;
     memcpy(ptr, data, length);
+	  debug(1, "UDP send metadata with type '%s', code '%s' and length %u.", tc, cc, length);
     sendto(metadata_sock, metadata_sockmsg, length + 8, 0, (struct sockaddr *)&metadata_sockaddr,
            sizeof(metadata_sockaddr));
   } else if (metadata_sock >= 0) {
@@ -1324,8 +1336,9 @@ void metadata_process(uint32_t type, uint32_t code, char *data, uint32_t length)
     uint32_t remaining = length;
     uint32_t v;
     char *data_crsr = data;
+	  debug(1, "UDP send metadata of type '%s', code '%s' and length %u in %" PRIu32 " chunks .", tc, cc, length, chunk_total);
     do {
-      debug(1,"metadata_process: sending chunk %" PRIu32 " of %" PRIu32 ".", chunk_ix, chunk_total);
+      debug(1,"UDP send metadata of type '%s', code '%s'. Sending chunk %" PRIu32 " of %" PRIu32 ".", tc, cc, chunk_ix + 1, chunk_total);
       char *ptr = metadata_sockmsg;
       memcpy(ptr, "ssncchnk", 8);
       ptr += 8;
