@@ -1324,10 +1324,11 @@ void metadata_process(uint32_t type, uint32_t code, char *data, uint32_t length)
 	  debug(1, "UDP send metadata with type '%s', code '%s' and length %u.", tc, cc, length);
     int ret = sendto(metadata_sock, metadata_sockmsg, length + 8, 0, (struct sockaddr *)&metadata_sockaddr,
            sizeof(metadata_sockaddr));
-		if (ret) {
+		if (ret == -1) {
 			char errorstring[1024];
-			strerror_r(ret, (char *)errorstring, sizeof(errorstring));
-			debug(1,"metadata_process: error %d: \"%s\" in UDP sendto while metadata of type '%s', code '%' and length %u bytes.",
+			ret = errno;
+			strerror_r(errno, (char *)errorstring, sizeof(errorstring));
+			debug(1,"metadata_process: error %d: \"%s\" in UDP sendto while metadata of type '%s', code '%s' and length %u bytes.",
 					ret, (char *)errorstring, tc, cc, length);
 		}
 
@@ -1369,10 +1370,11 @@ void metadata_process(uint32_t type, uint32_t code, char *data, uint32_t length)
       data_crsr += datalen;
       int ret = sendto(metadata_sock, metadata_sockmsg, datalen + 24, 0,
              (struct sockaddr *)&metadata_sockaddr, sizeof(metadata_sockaddr));
-    	if (ret) {
+    	if (ret == -1) {
         char errorstring[1024];
+        ret = errno;
         strerror_r(ret, (char *)errorstring, sizeof(errorstring));
-        debug(1,"metadata_process: error %d: \"%s\" in UDP sendto while sending chunk %" PRIu32 " of %" PRIu32 " of metadata type '%s', code '%' of length %u bytes.",
+        debug(1,"metadata_process: error %d: \"%s\" in UDP sendto while sending chunk %" PRIu32 " of %" PRIu32 " of metadata type '%s', code '%s' of length %u bytes.",
             ret, (char *)errorstring, chunk_ix + 1, chunk_total, tc, cc, length);
       }
 
