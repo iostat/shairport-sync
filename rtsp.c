@@ -1322,8 +1322,15 @@ void metadata_process(uint32_t type, uint32_t code, char *data, uint32_t length)
     ptr += 4;
     memcpy(ptr, data, length);
 	  debug(1, "UDP send metadata with type '%s', code '%s' and length %u.", tc, cc, length);
-    sendto(metadata_sock, metadata_sockmsg, length + 8, 0, (struct sockaddr *)&metadata_sockaddr,
+    int ret = sendto(metadata_sock, metadata_sockmsg, length + 8, 0, (struct sockaddr *)&metadata_sockaddr,
            sizeof(metadata_sockaddr));
+		if (ret) {
+			char errorstring[1024];
+			strerror_r(ret, (char *)errorstring, sizeof(errorstring));
+			debug(1,"metadata_process: error %d: \"%s\" in UDP sendto while metadata of type '%s', code '%' and length %u bytes.",
+					ret, (char *)errorstring, tc, cc, length);
+		}
+
   } else if (metadata_sock >= 0) {
     // send metadata in numbered chunks using the protocol:
     // ("ssnc", "chnk", packet_ix, packet_counts, packet_tag, packet_type, chunked_data)
@@ -1360,8 +1367,15 @@ void metadata_process(uint32_t type, uint32_t code, char *data, uint32_t length)
       }
       memcpy(ptr, data_crsr, datalen);
       data_crsr += datalen;
-      sendto(metadata_sock, metadata_sockmsg, datalen + 24, 0,
+      int ret = sendto(metadata_sock, metadata_sockmsg, datalen + 24, 0,
              (struct sockaddr *)&metadata_sockaddr, sizeof(metadata_sockaddr));
+    	if (ret) {
+        char errorstring[1024];
+        strerror_r(ret, (char *)errorstring, sizeof(errorstring));
+        debug(1,"metadata_process: error %d: \"%s\" in UDP sendto while sending chunk %" PRIu32 " of %" PRIu32 " of metadata type '%s', code '%' of length %u bytes.",
+            ret, (char *)errorstring, chunk_ix + 1, chunk_total, tc, cc, length);
+      }
+
       chunk_ix++;
       usleep(100000); // wait for this number of microseconds.
       remaining -= datalen;
