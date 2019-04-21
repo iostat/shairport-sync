@@ -352,6 +352,14 @@ AC_ARG_WITH(mqtt-client, [  --with-mqtt-client = include a client for MQTT -- th
   ],)
 AM_CONDITIONAL([USE_MQTT], [test "x$REQUESTED_MQTT" = "x1"])
 
+# Look for airplay2 flag
+AC_ARG_WITH(airplay-2, [  --with-airplay-2 = include experimental Airplay 2 support], [
+  AC_DEFINE([CONFIG_AIRPLAY_2], 1, [Include experimental support for Airplay 2])
+  AC_MSG_RESULT(>>Including Airplay 2 support)
+  REQUESTED_AIRPLAY_2=1
+  ],)
+AM_CONDITIONAL([USE_AIRPLAY2], [test "x$REQUESTED_AIRPLAY_2" = "x1"])
+
 
 if test "x$REQUESTED_MPRIS" = "x1" || test "x$REQUESTED_DBUS" = "x1" || test "x$REQUESTED_MQTT" = "x1"; then
   AC_MSG_RESULT(>>Including extended metadata and DACP client support)
