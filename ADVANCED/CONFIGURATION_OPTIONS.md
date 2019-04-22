@@ -73,4 +73,5 @@ General
  |  `--with-ssl=<library>` | Choose `--with-ssl=openssl`, `--with-ssl=mbedtls` or `--with-ssl=polarssl` (deprecated) for encryption services. |
  |  `--with-metadata` | Include support for a metadata feed |
  |  `--with-systemdsystemunitdir=DIR` | Specify the directory for `systemd` service files |
+ |  `--with-airplay-2` | Enable experimental Airplay 2 support |
 
