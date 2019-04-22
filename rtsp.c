@@ -78,6 +78,10 @@
 #define INETx_ADDRSTRLEN INET_ADDRSTRLEN
 #endif
 
+#ifdef CONFIG_AIRPLAY_2
+#include "plist/plist.h"
+#endif
+
 #define METADATA_SNDBUF (4 * 1024 * 1024)
 
 enum rtsp_read_request_response {
@@ -844,15 +848,52 @@ void handle_record(rtsp_conn_info *conn, rtsp_message *req, rtsp_message *resp) 
   }
 }
 
-void handle_get(__attribute((unused)) rtsp_conn_info *conn, rtsp_message *req, __attribute((unused)) rtsp_message *resp) {
+#ifdef CONFIG_AIRPLAY_2
+void handle_get_info(rtsp_conn_info *conn, rtsp_message *req, rtsp_message *resp); 
+void handle_get(rtsp_conn_info *conn, rtsp_message *req, rtsp_message *resp) {
   debug(3, "Connection %d: GET %s :: Content-Length %d", conn->connection_number, req->path, req->contentlength);
   if (strcmp(req->path, "/info") == 0) {
-    debug(3, "got a get info");
-    resp->respcode = 200;
+    handle_get_info(conn, req, resp);
   } else {
     resp->respcode = 404; //makes sense, right?
   }
 }
+
+void handle_get_info(__attribute((unused)) rtsp_conn_info *conn, rtsp_message *req, rtsp_message *resp) {
+  plist_t info_plist = plist_new_dict();
+  plist_from_memory(req->content, req->contentlength, &info_plist);
+  plist_t qualifier = plist_dict_get_item(info_plist, "qualifier"); 
+  if (qualifier == NULL) {
+    debug(3, "plist->qualifier was NULL");
+    goto user_fail;
+  }
+  if (plist_array_get_size(qualifier) < 1) {
+    debug(3, "plist->qualifier array length < 1");
+    goto user_fail;
+
+  }
+  plist_t qualifier_array_value = plist_array_get_item(qualifier, 0);
+  char *qualifier_array_val_cstr;
+  plist_get_string_val(qualifier_array_value, &qualifier_array_val_cstr);
+  if (qualifier_array_val_cstr == NULL) {
+    debug(3, "first item in qualifier array not a string");
+    goto user_fail;
+  }
+  debug(3, "qualifier: %s", qualifier_array_val_cstr);
+
+  resp->respcode = 200;
+  return;
+
+user_fail:
+  resp->respcode = 400;
+  return;
+}
+
+#else
+void handle_get(__attribute((unused)) rtsp_conn_info *conn, __attribute((unused)) rtsp_message *req, __attribute((unused)) rtsp_message *resp) {
+  resp->respcode = 500;
+}
+#endif
 
 void handle_options(rtsp_conn_info *conn, __attribute__((unused)) rtsp_message *req,
                     rtsp_message *resp) {
