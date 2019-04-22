@@ -357,6 +357,7 @@ AC_ARG_WITH(airplay-2, [  --with-airplay-2 = include experimental Airplay 2 supp
   AC_DEFINE([CONFIG_AIRPLAY_2], 1, [Include experimental support for Airplay 2])
   AC_MSG_RESULT(>>Including Airplay 2 support)
   REQUESTED_AIRPLAY_2=1
+  AC_CHECK_LIB([plist], [plist_from_memory], , AC_MSG_ERROR(Airplay 2 support requires libplist -- libplist-dev suggested!))
   ],)
 AM_CONDITIONAL([USE_AIRPLAY2], [test "x$REQUESTED_AIRPLAY_2" = "x1"])
 
