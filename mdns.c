@@ -73,7 +73,21 @@ void mdns_register(void) {
   }
   *p++ = '@';
   strcpy(p, config.service_name);
-
+#ifdef CONFIG_AIRPLAY_2
+  if (config.airplay_device_id == NULL) {
+    char *device_id_string = alloca(strlen("deviceid=") + 17); // 12 nibbles + 5 colons for mac address
+    p = device_id_string;
+    strcpy(p, "deviceid=");
+    p += 9;
+    for (i = 0; i < 6; i++) {
+      snprintf(p, 4, "%02X:", config.hw_addr[i]);
+      p += 3;
+    }
+    p -= 1;
+    *p = 0;
+    config.airplay_device_id = device_id_string;
+ }
+ #endif
   mdns_backend **b = NULL;
 
   if (config.mdns_name != NULL) {

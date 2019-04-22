@@ -73,6 +73,10 @@ static AvahiThreadedPoll *tpoll = NULL;
 static char *service_name = NULL;
 static int port = 0;
 
+#ifdef CONFIG_AIRPLAY_2
+static int ap2_port = 0;
+#endif
+
 static void resolve_callback(AvahiServiceResolver *r, AVAHI_GCC_UNUSED AvahiIfIndex interface,
                              AVAHI_GCC_UNUSED AvahiProtocol protocol, AvahiResolverEvent event,
                              const char *name, const char *type, const char *domain,
@@ -247,10 +251,21 @@ static void register_service(AvahiClient *c) {
     }
 #endif
 
+#ifdef CONFIG_AIRPLAY_2
+    int ret_ap2;
+    printf("%s\n", config.service_name);
+    ret_ap2 = avahi_entry_group_add_service(group, selected_interface, AVAHI_PROTO_UNSPEC, 0,
+                                            config.service_name, "_airplay._tcp", NULL, NULL, ap2_port, // config.service_name to include the MACADDR@ part
+                                            AP2_MDNS_RECORD, NULL);
+    debug(2, "avahi: request to add \"%s\"_airplay._tcp service", config.service_name);
+    if (ret < 0 || ret_ap2 < 0)
+#else
     if (ret < 0)
+#endif
       debug(1, "avahi: avahi_entry_group_add_service failed");
     else {
       ret = avahi_entry_group_commit(group);
+      debug(2, "avahi: avahi_entry_group_commit %d", ret);
       if (ret < 0)
         debug(1, "avahi: avahi_entry_group_commit failed");
     }
@@ -366,6 +381,10 @@ static int avahi_register(char *srvname, int srvport) {
   // debug(1, "avahi: avahi_register.");
   service_name = strdup(srvname);
   port = srvport;
+
+#ifdef CONFIG_AIRPLAY_2
+  ap2_port = 7000;
+#endif
 
   int err;
   if (!(tpoll = avahi_threaded_poll_new())) {

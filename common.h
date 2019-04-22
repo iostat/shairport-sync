@@ -242,6 +242,9 @@ typedef struct {
   char *jack_autoconnect_pattern;
 #endif
 
+#ifdef CONFIG_AIRPLAY_2
+  char *airplay_device_id; // should be the full deviceid=AM:AC:AD:RE:SS string
+#endif
 } shairport_cfg;
 
 uint32_t nctohl(const uint8_t *p); // read 4 characters from *p and do ntohl on them
