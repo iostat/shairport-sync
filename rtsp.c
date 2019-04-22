@@ -136,6 +136,7 @@ typedef struct {
 
   // for requests
   char method[16];
+  char path[256];
 
   // for responses
   int respcode;
@@ -538,6 +539,7 @@ int msg_handle_line(rtsp_message **pmsg, char *line) {
     p = strtok_r(NULL, " ", &sp);
     if (!p)
       goto fail;
+    strncpy(msg->path, p, sizeof(msg->path) - 1);
 
     p = strtok_r(NULL, " ", &sp);
     if (!p)
@@ -842,13 +844,23 @@ void handle_record(rtsp_conn_info *conn, rtsp_message *req, rtsp_message *resp) 
   }
 }
 
+void handle_get(__attribute((unused)) rtsp_conn_info *conn, rtsp_message *req, __attribute((unused)) rtsp_message *resp) {
+  debug(3, "Connection %d: GET %s :: Content-Length %d", conn->connection_number, req->path, req->contentlength);
+  if (strcmp(req->path, "/info") == 0) {
+    debug(3, "got a get info");
+    resp->respcode = 200;
+  } else {
+    resp->respcode = 404; //makes sense, right?
+  }
+}
+
 void handle_options(rtsp_conn_info *conn, __attribute__((unused)) rtsp_message *req,
                     rtsp_message *resp) {
   debug(3, "Connection %d: OPTIONS", conn->connection_number);
   resp->respcode = 200;
   msg_add_header(resp, "Public", "ANNOUNCE, SETUP, RECORD, "
                                  "PAUSE, FLUSH, TEARDOWN, "
-                                 "OPTIONS, GET_PARAMETER, SET_PARAMETER");
+                                 "OPTIONS, GET_PARAMETER, SET_PARAMETER, GET");
 }
 
 void handle_teardown(rtsp_conn_info *conn, __attribute__((unused)) rtsp_message *req,
@@ -1955,6 +1967,7 @@ static struct method_handler {
                        {"GET_PARAMETER", handle_get_parameter},
                        {"SET_PARAMETER", handle_set_parameter},
                        {"RECORD", handle_record},
+                       {"GET", handle_get},
                        {NULL, NULL}};
 
 static void apple_challenge(int fd, rtsp_message *req, rtsp_message *resp) {
