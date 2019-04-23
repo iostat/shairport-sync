@@ -257,7 +257,7 @@ static void register_service(AvahiClient *c) {
     ret_ap2 = avahi_entry_group_add_service(group, selected_interface, AVAHI_PROTO_UNSPEC, 0,
                                             config.service_name, "_airplay._tcp", NULL, NULL, ap2_port, // config.service_name to include the MACADDR@ part
                                             AP2_MDNS_RECORD, NULL);
-    debug(2, "avahi: request to add \"%s\"_airplay._tcp service", config.service_name);
+    debug(2, "avahi: request to add %s._airplay._tcp service", config.service_name);
     if (ret < 0 || ret_ap2 < 0)
 #else
     if (ret < 0)

@@ -32,6 +32,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "util.h"
+
 #ifdef CONFIG_AVAHI
 extern mdns_backend mdns_avahi;
 #endif
@@ -64,28 +66,14 @@ static mdns_backend *mdns_backends[] = {
     NULL};
 
 void mdns_register(void) {
-  char *mdns_service_name = alloca(strlen(config.service_name) + 14);
-  char *p = mdns_service_name;
-  int i;
-  for (i = 0; i < 6; i++) {
-    snprintf(p, 3, "%02X", config.hw_addr[i]);
-    p += 2;
-  }
+  char *mdns_service_name = render_hw_address(config.hw_addr, "", "");
+  mdns_service_name = realloc(mdns_service_name, strlen(mdns_service_name) + 1 + strlen(config.service_name));
+  char *p = mdns_service_name + strlen(mdns_service_name);
   *p++ = '@';
   strcpy(p, config.service_name);
 #ifdef CONFIG_AIRPLAY_2
   if (config.airplay_device_id == NULL) {
-    char *device_id_string = alloca(strlen("deviceid=") + 17); // 12 nibbles + 5 colons for mac address
-    p = device_id_string;
-    strcpy(p, "deviceid=");
-    p += 9;
-    for (i = 0; i < 6; i++) {
-      snprintf(p, 4, "%02X:", config.hw_addr[i]);
-      p += 3;
-    }
-    p -= 1;
-    *p = 0;
-    config.airplay_device_id = device_id_string;
+    config.airplay_device_id = render_hw_address(config.hw_addr, "deviceid=", ":");
  }
  #endif
   mdns_backend **b = NULL;
@@ -117,6 +105,7 @@ void mdns_register(void) {
     die("Could not establish mDNS advertisement!");
 
   mdns_dacp_monitor_start(); // create a dacp monitor thread
+  free(mdns_service_name);
 }
 
 void mdns_unregister(void) {
