@@ -80,6 +80,7 @@
 
 #ifdef CONFIG_AIRPLAY_2
 #include "plist/plist.h"
+#include "ap2.h"
 #endif
 
 #define METADATA_SNDBUF (4 * 1024 * 1024)
@@ -135,7 +136,7 @@ typedef struct {
   char *name[16];
   char *value[16];
 
-  int contentlength;
+  uint32_t contentlength;
   char *content;
 
   // for requests
@@ -144,6 +145,7 @@ typedef struct {
 
   // for responses
   int respcode;
+  int close_on_response;
 } rtsp_message;
 
 #ifdef CONFIG_METADATA
@@ -860,6 +862,8 @@ void handle_get(rtsp_conn_info *conn, rtsp_message *req, rtsp_message *resp) {
 }
 
 void handle_get_info(__attribute((unused)) rtsp_conn_info *conn, rtsp_message *req, rtsp_message *resp) {
+  resp->close_on_response = 1;
+
   plist_t info_plist = plist_new_dict();
   plist_from_memory(req->content, req->contentlength, &info_plist);
   plist_t qualifier = plist_dict_get_item(info_plist, "qualifier"); 
@@ -880,6 +884,10 @@ void handle_get_info(__attribute((unused)) rtsp_conn_info *conn, rtsp_message *r
     goto user_fail;
   }
   debug(3, "qualifier: %s", qualifier_array_val_cstr);
+
+  plist_t response_plist = get_info_dict(config.hw_addr, "tart");
+  plist_to_bin(response_plist, &(resp->content), &(resp->contentlength));
+  plist_free(response_plist);
 
   resp->respcode = 200;
   return;
@@ -2453,6 +2461,9 @@ static void *rtsp_conversation_thread_func(void *pconn) {
 
       if (conn->stop == 0) {
         int err = msg_write_response(conn->fd, resp);
+        if (resp->close_on_response) {
+          conn->stop = 1;
+        }
         if (err) {
           debug(1, "Connection %d: Unable to write an RTSP message response. Terminating the "
                    "connection.",

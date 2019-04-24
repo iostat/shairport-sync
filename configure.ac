@@ -359,7 +359,7 @@ AC_ARG_WITH(airplay-2, [  --with-airplay-2 = include experimental Airplay 2 supp
   REQUESTED_AIRPLAY_2=1
   AC_CHECK_LIB([plist], [plist_from_memory], , AC_MSG_ERROR(Airplay 2 support requires libplist -- libplist-dev suggested!))
   ],)
-AM_CONDITIONAL([USE_AIRPLAY2], [test "x$REQUESTED_AIRPLAY_2" = "x1"])
+AM_CONDITIONAL([USE_AIRPLAY_2], [test "x$REQUESTED_AIRPLAY_2" = "x1"])
 
 
 if test "x$REQUESTED_MPRIS" = "x1" || test "x$REQUESTED_DBUS" = "x1" || test "x$REQUESTED_MQTT" = "x1"; then

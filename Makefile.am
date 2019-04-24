@@ -101,6 +101,10 @@ if USE_DACP_CLIENT
 shairport_sync_SOURCES += dacp.c tinyhttp/chunk.c tinyhttp/header.c tinyhttp/http.c 
 endif
 
+if USE_AIRPLAY_2
+shairport_sync_SOURCES += ap2.c
+endif
+
 BUILT_SOURCES =
 noinst_HEADERS =
 CLEANFILES =
@@ -156,6 +160,7 @@ noinst_PROGRAMS += shairport-sync-mpris-test-client
 shairport_sync_mpris_test_client_SOURCES = shairport-sync-mpris-test-client.c
 shairport_sync_mpris_test_client_LDADD = lib_mpris_interface.a
 endif
+
 
 install-exec-hook:
 if INSTALL_CONFIG_FILES
