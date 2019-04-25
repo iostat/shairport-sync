@@ -41,7 +41,7 @@ typedef struct {
 #endif
 
 #ifdef CONFIG_AIRPLAY_2
-#define AP2_MDNS_RECORD "srcvers=366.0", "features=0x40180200,0x300", config.airplay_device_id
+#define AP2_MDNS_RECORD "acl=0", "flags=0x4", "protovers=1.1", "srcvers=366.0", "features=0x40180200,0x300", config.airplay_device_id
 #endif
 /*
  #define MDNS_RECORD_WITHOUT_METADATA \

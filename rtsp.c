@@ -146,6 +146,7 @@ typedef struct {
   // for responses
   int respcode;
   int close_on_response;
+  int suppress_crlf;
 } rtsp_message;
 
 #ifdef CONFIG_METADATA
@@ -776,16 +777,24 @@ int msg_write_response(int fd, rtsp_message *resp) {
       debug(1, "Attempted to write overlong RTSP packet 2");
       return -2;
     }
+#ifdef CONFIG_AIRPLAY_2
+    char* b64_content = base64_encode(resp->content, resp->contentlength);
+    debug(1, "Content is (base64 encoded): %s", b64_content);
+    free(b64_content);
+#else
     debug(1, "Content is \"%s\"", resp->content);
+#endif
     memcpy(p, resp->content, resp->contentlength);
     pktfree -= resp->contentlength;
     p += resp->contentlength;
   }
 
-  n = snprintf(p, pktfree, "\r\n");
-  pktfree -= n;
-  p += n;
-
+  if (!resp->suppress_crlf) {
+    n = snprintf(p, pktfree, "\r\n");
+    pktfree -= n;
+    p += n;
+  }
+ 
   if (pktfree <= 1024) {
     debug(1, "Attempted to write overlong RTSP packet 3");
     return -3;
@@ -863,6 +872,7 @@ void handle_get(rtsp_conn_info *conn, rtsp_message *req, rtsp_message *resp) {
 
 void handle_get_info(__attribute((unused)) rtsp_conn_info *conn, rtsp_message *req, rtsp_message *resp) {
   resp->close_on_response = 1;
+  resp->suppress_crlf = 1;
 
   plist_t info_plist = plist_new_dict();
   plist_from_memory(req->content, req->contentlength, &info_plist);
@@ -889,6 +899,8 @@ void handle_get_info(__attribute((unused)) rtsp_conn_info *conn, rtsp_message *r
   plist_to_bin(response_plist, &(resp->content), &(resp->contentlength));
   plist_free(response_plist);
 
+  msg_add_header(resp, "Content-Type", "application/x-apple-binary-plist");
+  
   resp->respcode = 200;
   return;
 
@@ -2411,7 +2423,11 @@ static void *rtsp_conversation_thread_func(void *pconn) {
       if (hdr)
         msg_add_header(resp, "CSeq", hdr);
       //      msg_add_header(resp, "Audio-Jack-Status", "connected; type=analog");
+#ifdef CONFIG_AIRPLAY_2
+      msg_add_header(resp, "Server", "AirPlay/336.0");
+#else
       msg_add_header(resp, "Server", "AirTunes/105.1");
+#endif
 
       if ((conn->authorized == 1) || (rtsp_auth(&conn->auth_nonce, req, resp)) == 0) {
         conn->authorized = 1; // it must have been authorized or didn't need a password
