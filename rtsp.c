@@ -872,6 +872,7 @@ void handle_get(rtsp_conn_info *conn, rtsp_message *req, rtsp_message *resp) {
 
 void handle_get_info(__attribute((unused)) rtsp_conn_info *conn, rtsp_message *req, rtsp_message *resp) {
   resp->close_on_response = 1;
+  msg_add_header(resp, "Connection", "Close");
   resp->suppress_crlf = 1;
 
   plist_t info_plist = plist_new_dict();
