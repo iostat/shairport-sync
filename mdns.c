@@ -73,7 +73,8 @@ void mdns_register(void) {
   strcpy(p, config.service_name);
 #ifdef CONFIG_AIRPLAY_2
   if (config.airplay_device_id == NULL) {
-    config.airplay_device_id = render_hw_address(config.hw_addr, "deviceid=", ":");
+    uint8_t bt_addr[6] = {0xB8, 0x27, 0xEB, 0xB7, 0xD4, 0x0E};
+    config.airplay_device_id = render_hw_address(bt_addr, "deviceid=", ":");
  }
  #endif
   mdns_backend **b = NULL;

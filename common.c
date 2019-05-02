@@ -101,7 +101,7 @@ static void (*sps_log)(int prio, const char *t, ...) = syslog;
 #endif
 
 void do_sps_log(__attribute__((unused)) int prio, const char *t, ...) {
-  char s[1024];
+  char s[8192];
   va_list args;
   va_start(args, t);
   vsnprintf(s, sizeof(s), t, args);
@@ -153,7 +153,7 @@ void set_requested_connection_state_to_output(int v) { requested_connection_stat
 void die(const char *format, ...) {
   int oldState;
   pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &oldState);
-  char s[1024];
+  char s[8192];
   s[0] = 0;
   uint64_t time_now = get_absolute_time_in_fp();
   uint64_t time_since_start = time_now - fp_time_at_startup;
@@ -182,7 +182,7 @@ void die(const char *format, ...) {
 void warn(const char *format, ...) {
   int oldState;
   pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &oldState);
-  char s[1024];
+  char s[8192];
   s[0] = 0;
   uint64_t time_now = get_absolute_time_in_fp();
   uint64_t time_since_start = time_now - fp_time_at_startup;
@@ -211,7 +211,7 @@ void debug(int level, const char *format, ...) {
     return;
   int oldState;
   pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &oldState);
-  char s[1024];
+  char s[8192];
   s[0] = 0;
   uint64_t time_now = get_absolute_time_in_fp();
   uint64_t time_since_start = time_now - fp_time_at_startup;
@@ -238,7 +238,7 @@ void debug(int level, const char *format, ...) {
 void inform(const char *format, ...) {
   int oldState;
   pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &oldState);
-  char s[1024];
+  char s[8192];
   s[0] = 0;
   uint64_t time_now = get_absolute_time_in_fp();
   uint64_t time_since_start = time_now - fp_time_at_startup;
@@ -424,24 +424,17 @@ char *base64_enc(uint8_t *input, int length) {
   BUF_MEM *bptr;
   b64 = BIO_new(BIO_f_base64());
   bmem = BIO_new(BIO_s_mem());
-  b64 = BIO_push(b64, bmem);
-  BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
-  BIO_write(b64, input, length);
-  (void) BIO_flush(b64);
-  BIO_get_mem_ptr(b64, &bptr);
+  bmem = BIO_push(b64, bmem);
+  BIO_set_flags(bmem, BIO_FLAGS_BASE64_NO_NL);
+  BIO_write(bmem, input, length);
+  (void) BIO_flush(bmem);
+  BIO_get_mem_ptr(bmem, &bptr);
+  BIO_set_close(bmem, BIO_NOCLOSE);
 
-  char *buf = (char *)malloc(bptr->length);
-  if (buf == NULL)
-    die("could not allocate memory for buf in base64_enc");
-  if (bptr->length) {
-    memcpy(buf, bptr->data, bptr->length - 1);
-    buf[bptr->length - 1] = 0;
-  }
-
-  BIO_free_all(b64);
+  BIO_free_all(bmem);
 
   pthread_setcancelstate(oldState, NULL);
-  return buf;
+  return bptr->data;
 }
 
 uint8_t *base64_dec(char *input, int *outlen) {

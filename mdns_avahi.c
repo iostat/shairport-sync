@@ -235,16 +235,16 @@ static void register_service(AvahiClient *c) {
       selected_interface = AVAHI_IF_UNSPEC;
 #ifdef CONFIG_METADATA
     if (config.metadata_enabled) {
-      ret = avahi_entry_group_add_service(group, selected_interface, AVAHI_PROTO_UNSPEC, 0,
-                                          service_name, config.regtype, NULL, NULL, port,
-                                          MDNS_RECORD_WITH_METADATA, NULL);
+      //ret = avahi_entry_group_add_service(group, selected_interface, AVAHI_PROTO_UNSPEC, 0,
+      //                                    service_name, config.regtype, NULL, NULL, port,
+     //                                     MDNS_RECORD_WITH_METADATA, NULL);
       if (ret == 0)
         debug(2, "avahi: request to add \"%s\" service with metadata", config.regtype);
     } else {
 #endif
-      ret = avahi_entry_group_add_service(group, selected_interface, AVAHI_PROTO_UNSPEC, 0,
-                                          service_name, config.regtype, NULL, NULL, port,
-                                          MDNS_RECORD_WITHOUT_METADATA, NULL);
+     // ret = avahi_entry_group_add_service(group, selected_interface, AVAHI_PROTO_UNSPEC, 0,
+     //                                     service_name, config.regtype, NULL, NULL, port,
+     //                                     MDNS_RECORD_WITHOUT_METADATA, NULL);
       if (ret == 0)
         debug(2, "avahi: request to add \"%s\" service without metadata", config.regtype);
 #ifdef CONFIG_METADATA
@@ -253,7 +253,6 @@ static void register_service(AvahiClient *c) {
 
 #ifdef CONFIG_AIRPLAY_2
     int ret_ap2;
-    printf("%s\n", config.service_name);
     ret_ap2 = avahi_entry_group_add_service(group, selected_interface, AVAHI_PROTO_UNSPEC, 0,
                                             config.service_name, "_airplay._tcp", NULL, NULL, ap2_port, // config.service_name to include the MACADDR@ part
                                             AP2_MDNS_RECORD, NULL);

@@ -41,7 +41,13 @@ typedef struct {
 #endif
 
 #ifdef CONFIG_AIRPLAY_2
-#define AP2_MDNS_RECORD "acl=0", "flags=0x4", "protovers=1.1", "srcvers=366.0", "features=0x40180200,0x300", config.airplay_device_id
+#define AP2_MDNS_RECORD "acl=0", "am=ShairportSync","flags=0x4", "protovers=1.1", "srcvers=366.0", \
+                        "features=0x445D0A00,0x1C340", "gcgl=0", "rsf=0x0", \
+                        "manufacturer=iostat/griff/mikebrady", \
+                        "gid=1698df64-e8c9-4e4f-9663-5797ee57dcef", \
+                        "pi=1698df64-e8c9-4e4f-9663-5797ee57dcef", \
+                        "pk=2733c75ca6ce6752550da22687adf9b29b18e46c0fce8a7369083a0847dd87ef", \
+                        config.airplay_device_id
 #endif
 /*
  #define MDNS_RECORD_WITHOUT_METADATA \

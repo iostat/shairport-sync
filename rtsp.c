@@ -743,7 +743,7 @@ shutdown:
 }
 
 int msg_write_response(int fd, rtsp_message *resp) {
-  char pkt[2048];
+  char pkt[4096];
   int pktfree = sizeof(pkt);
   char *p = pkt;
   int n;
@@ -778,8 +778,8 @@ int msg_write_response(int fd, rtsp_message *resp) {
       return -2;
     }
 #ifdef CONFIG_AIRPLAY_2
-    char* b64_content = base64_encode(resp->content, resp->contentlength);
-    debug(1, "Content is (base64 encoded): %s", b64_content);
+    char *b64_content = base64_enc((unsigned char *)resp->content, resp->contentlength);
+    debug(1, "Content is (base64 encoded): %s\n", b64_content);
     free(b64_content);
 #else
     debug(1, "Content is \"%s\"", resp->content);
@@ -871,8 +871,7 @@ void handle_get(rtsp_conn_info *conn, rtsp_message *req, rtsp_message *resp) {
 }
 
 void handle_get_info(__attribute((unused)) rtsp_conn_info *conn, rtsp_message *req, rtsp_message *resp) {
-  resp->close_on_response = 1;
-  msg_add_header(resp, "Connection", "Close");
+  //resp->close_on_response = 1;
   resp->suppress_crlf = 1;
 
   plist_t info_plist = plist_new_dict();
@@ -896,7 +895,8 @@ void handle_get_info(__attribute((unused)) rtsp_conn_info *conn, rtsp_message *r
   }
   debug(3, "qualifier: %s", qualifier_array_val_cstr);
 
-  plist_t response_plist = get_info_dict(config.hw_addr, "tart");
+  uint8_t bt_addr[6] = {0xB8, 0x27, 0xEB, 0xB7, 0xD4, 0x0E};
+  plist_t response_plist = get_info_dict(bt_addr, "tart");
   plist_to_bin(response_plist, &(resp->content), &(resp->contentlength));
   plist_free(response_plist);
 
@@ -2425,7 +2425,7 @@ static void *rtsp_conversation_thread_func(void *pconn) {
         msg_add_header(resp, "CSeq", hdr);
       //      msg_add_header(resp, "Audio-Jack-Status", "connected; type=analog");
 #ifdef CONFIG_AIRPLAY_2
-      msg_add_header(resp, "Server", "AirPlay/336.0");
+      msg_add_header(resp, "Server", "AirPlay/366.0");
 #else
       msg_add_header(resp, "Server", "AirTunes/105.1");
 #endif
